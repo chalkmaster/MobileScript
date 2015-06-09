@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D9C39599-23FA-4913-8386-CF3A5259FDEC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Seculus.MobileScript.Core</RootNamespace>
+    <AssemblyName>Seculus.MobileScript.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AppPlat.Framework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\AppPlat.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="AppPlat.Modules.WorkflowEditor, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\AppPlat.Modules.WorkflowEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="AppPlat.Modules.WorkflowEditor.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\AppPlat.Modules.WorkflowEditor.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="AppPlat.Modules.WorkflowEditor.Resources, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\AppPlat.Modules.WorkflowEditor.Resources.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EnumDisplayNameAttribute.cs" />
+    <Compile Include="Extensions\CharExtension.cs" />
+    <Compile Include="Extensions\EnumExtension.cs" />
+    <Compile Include="Extensions\GuidExtension.cs" />
+    <Compile Include="Extensions\ObjectExtension.cs" />
+    <Compile Include="Extensions\StringExtension.cs" />
+    <Compile Include="Helpers\AppPathsHelper.cs" />
+    <Compile Include="Helpers\Check.cs" />
+    <Compile Include="Helpers\DataValidator.cs" />
+    <Compile Include="Helpers\EnumHelper.cs" />
+    <Compile Include="Helpers\MigratorHelper.cs" />
+    <Compile Include="Helpers\NumberHelper.cs" />
+    <Compile Include="Helpers\ResourcesHelper.cs" />
+    <Compile Include="Helpers\StringHelper.cs" />
+    <Compile Include="Helpers\UriHelper.cs" />
+    <Compile Include="Helpers\ValidatorHelper.cs" />
+    <Compile Include="Helpers\XmlHelper.cs" />
+    <Compile Include="IValidator.cs" />
+    <Compile Include="MobileScript\Compiler\CodeCompiler.cs" />
+    <Compile Include="MobileScript\Compiler\CodeGenerationException.cs" />
+    <Compile Include="MobileScript\Compiler\CodeGeneratorVisitor.cs" />
+    <Compile Include="MobileScript\Compiler\CompilationError.cs" />
+    <Compile Include="MobileScript\Compiler\CompilationErrorType.cs" />
+    <Compile Include="MobileScript\Compiler\CompilationException.cs" />
+    <Compile Include="MobileScript\Compiler\CompilerResults.cs" />
+    <Compile Include="MobileScript\Compiler\Keywords.cs" />
+    <Compile Include="MobileScript\Compiler\Lex.cs" />
+    <Compile Include="MobileScript\Compiler\LexSymbol.cs" />
+    <Compile Include="MobileScript\Compiler\LexSymbolKind.cs" />
+    <Compile Include="MobileScript\Compiler\MobileScriptReader.cs" />
+    <Compile Include="MobileScript\Compiler\Parser.cs" />
+    <Compile Include="MobileScript\Compiler\ParsingException.cs" />
+    <Compile Include="MobileScript\Compiler\Preprocessor.cs" />
+    <Compile Include="MobileScript\Compiler\ReservedWordsTable.cs" />
+    <Compile Include="MobileScript\Compiler\SemanticException.cs" />
+    <Compile Include="MobileScript\Compiler\SemanticVisitor.cs" />
+    <Compile Include="MobileScript\Compiler\SourceCodeReader.cs" />
+    <Compile Include="MobileScript\Compiler\UnexpectedSymbolException.cs" />
+    <Compile Include="MobileScript\ProgramTree\Helpers\ToStringVisitor.cs" />
+    <Compile Include="MobileScript\VirtualMachine\Serialization\IProgramSerializer.cs" />
+    <Compile Include="MobileScript\VirtualMachine\Serialization\LegacyProgramSerializer.cs" />
+    <Compile Include="MobileScript\ProgramTree\Declaration.cs" />
+    <Compile Include="MobileScript\ProgramTree\Declarations\VariableDeclarationList.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expression.cs" />
+    <Compile Include="MobileScript\ProgramTree\Declarations\FunctionDeclaration.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Constant.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\FunctionCall.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\IndexingOperation.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\DyadicOperation.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statements\Assignment.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statements\CompoundStatement.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statements\FunctionCallStatement.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statements\IfStatement.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statements\ReturnStatement.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statements\WhileStatement.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\TupleConstant.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\UnaryOperation.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Variable.cs" />
+    <Compile Include="MobileScript\ProgramTree\Helpers\SourceCodeBuilder.cs" />
+    <Compile Include="MobileScript\ProgramTree\INodeVisitor.cs" />
+    <Compile Include="MobileScript\ProgramTree\Node.cs" />
+    <Compile Include="MobileScript\ProgramTree\ProgramDescription.cs" />
+    <Compile Include="MobileScript\ProgramTree\RplConstants.cs" />
+    <Compile Include="MobileScript\ProgramTree\RplOperationType.cs" />
+    <Compile Include="MobileScript\ProgramTree\Declarations\TypeDeclaration.cs" />
+    <Compile Include="MobileScript\ProgramTree\Declarations\VariableDeclaration.cs" />
+    <Compile Include="MobileScript\ProgramTree\Declarations\VectorTypeDeclaration.cs" />
+    <Compile Include="MobileScript\ProgramTree\Expressions\Statement.cs" />
+    <Compile Include="MobileScript\Symbols\ConstantSymbol.cs" />
+    <Compile Include="MobileScript\Symbols\FunctionSymbol.cs" />
+    <Compile Include="MobileScript\Symbols\ParameterSymbol.cs" />
+    <Compile Include="MobileScript\Symbols\PreDefinedFunctionSymbol.cs" />
+    <Compile Include="MobileScript\Symbols\PreDefinedFunctionSymbolList.cs" />
+    <Compile Include="MobileScript\Symbols\Scope.cs" />
+    <Compile Include="MobileScript\Symbols\Symbol.cs" />
+    <Compile Include="MobileScript\Symbols\SymbolKind.cs" />
+    <Compile Include="MobileScript\Symbols\SymbolLevel.cs" />
+    <Compile Include="MobileScript\Symbols\SymbolsTable.cs" />
+    <Compile Include="MobileScript\Symbols\VariableSymbol.cs" />
+    <Compile Include="MobileScript\VirtualMachine\Conventions.cs" />
+    <Compile Include="MobileScript\VirtualMachine\DataType.cs" />
+    <Compile Include="MobileScript\VirtualMachine\ErrorCode.cs" />
+    <Compile Include="MobileScript\VirtualMachine\Instruction.cs" />
+    <Compile Include="MobileScript\VirtualMachine\InstructionCode.cs" />
+    <Compile Include="MobileScript\VirtualMachine\InstructionsTable.cs" />
+    <Compile Include="MobileScript\VirtualMachine\InvalidIndexException.cs" />
+    <Compile Include="MobileScript\VirtualMachine\InvalidOperandException.cs" />
+    <Compile Include="MobileScript\VirtualMachine\NullOperandException.cs" />
+    <Compile Include="MobileScript\VirtualMachine\Operand.cs" />
+    <Compile Include="MobileScript\VirtualMachine\PreDefinedFunctionCode.cs" />
+    <Compile Include="MobileScript\VirtualMachine\Program.cs" />
+    <Compile Include="MobileScript\VirtualMachine\StackException.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

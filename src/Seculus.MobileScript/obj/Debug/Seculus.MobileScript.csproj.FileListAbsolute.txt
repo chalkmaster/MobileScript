@@ -1,0 +1,6 @@
+D:\Projects\MobileScript\src\Seculus.MobileScript\bin\Debug\Seculus.MobileScript.exe.config
+D:\Projects\MobileScript\src\Seculus.MobileScript\bin\Debug\Seculus.MobileScript.exe
+D:\Projects\MobileScript\src\Seculus.MobileScript\bin\Debug\Seculus.MobileScript.pdb
+D:\Projects\MobileScript\src\Seculus.MobileScript\obj\Debug\Seculus.MobileScript.csprojResolveAssemblyReference.cache
+D:\Projects\MobileScript\src\Seculus.MobileScript\obj\Debug\Seculus.MobileScript.exe
+D:\Projects\MobileScript\src\Seculus.MobileScript\obj\Debug\Seculus.MobileScript.pdb

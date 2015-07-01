@@ -169,6 +169,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
                 Errors.Add(new CompilationError("Invalid file to include.", CompilationErrorType.PreprocessorError, directiveSymbol));
             }
         }
+
         private void ProcessIncludeWithUrl(LexSymbol directiveSymbol, string url)
         {
             if (url == null)
@@ -186,6 +187,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
             _file.AddDeviationToANewFile(_file.GetLineNumber(), url, fileContent, 0);
         }
+
         private void ProcessIncludeWithLibraryName(LexSymbol directiveSymbol, string libraryName)
         {
             if (libraryName == null)

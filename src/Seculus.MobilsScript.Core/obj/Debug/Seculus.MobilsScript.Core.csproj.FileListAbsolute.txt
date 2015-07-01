@@ -17,3 +17,14 @@ D:\Projects\MobileScript\src\Seculus.MobilsScript.Core\bin\Debug\AppPlat.Modules
 D:\Projects\MobileScript\src\Seculus.MobilsScript.Core\bin\Debug\AppPlat.Modules.Corporate.Resources.pdb
 D:\Projects\MobileScript\src\Seculus.MobilsScript.Core\obj\Debug\Seculus.MobileScript.Core.dll
 D:\Projects\MobileScript\src\Seculus.MobilsScript.Core\obj\Debug\Seculus.MobileScript.Core.pdb
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\Seculus.MobileScript.Core.dll.config
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\Seculus.MobileScript.Core.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\Seculus.MobileScript.Core.pdb
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\AppPlat.Framework.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\AppPlat.Modules.WorkflowEditor.Core.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\AppPlat.Modules.WorkflowEditor.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\AppPlat.Modules.WorkflowEditor.Resources.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\bin\Debug\Newtonsoft.Json.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\obj\Debug\Seculus.MobileScript.Core.dll
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\obj\Debug\Seculus.MobileScript.Core.pdb
+C:\Klais\Prime\fromGitHub\MobileScript-master\src\Seculus.MobilsScript.Core\obj\Debug\Seculus.MobilsScript.Core.csprojResolveAssemblyReference.cache

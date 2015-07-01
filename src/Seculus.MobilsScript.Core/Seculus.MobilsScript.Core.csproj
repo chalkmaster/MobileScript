@@ -102,9 +102,9 @@
     <Compile Include="MobileScript\VirtualMachine\Serialization\IProgramSerializer.cs" />
     <Compile Include="MobileScript\VirtualMachine\Serialization\LegacyProgramSerializer.cs" />
     <Compile Include="MobileScript\ProgramTree\Declaration.cs" />
-    <Compile Include="MobileScript\ProgramTree\Declarations\VariableDeclarationList.cs" />
+    <Compile Include="MobileScript\Compiler\Declarations\VariableDeclarationList.cs" />
     <Compile Include="MobileScript\ProgramTree\Expression.cs" />
-    <Compile Include="MobileScript\ProgramTree\Declarations\FunctionDeclaration.cs" />
+    <Compile Include="MobileScript\Compiler\Declarations\FunctionDeclaration.cs" />
     <Compile Include="MobileScript\ProgramTree\Expressions\Constant.cs" />
     <Compile Include="MobileScript\ProgramTree\Expressions\FunctionCall.cs" />
     <Compile Include="MobileScript\ProgramTree\Expressions\IndexingOperation.cs" />
@@ -124,9 +124,9 @@
     <Compile Include="MobileScript\ProgramTree\ProgramDescription.cs" />
     <Compile Include="MobileScript\ProgramTree\RplConstants.cs" />
     <Compile Include="MobileScript\ProgramTree\RplOperationType.cs" />
-    <Compile Include="MobileScript\ProgramTree\Declarations\TypeDeclaration.cs" />
-    <Compile Include="MobileScript\ProgramTree\Declarations\VariableDeclaration.cs" />
-    <Compile Include="MobileScript\ProgramTree\Declarations\VectorTypeDeclaration.cs" />
+    <Compile Include="MobileScript\Compiler\Declarations\TypeDeclaration.cs" />
+    <Compile Include="MobileScript\Compiler\Declarations\VariableDeclaration.cs" />
+    <Compile Include="MobileScript\Compiler\Declarations\VectorTypeDeclaration.cs" />
     <Compile Include="MobileScript\ProgramTree\Expressions\Statement.cs" />
     <Compile Include="MobileScript\Symbols\ConstantSymbol.cs" />
     <Compile Include="MobileScript\Symbols\FunctionSymbol.cs" />

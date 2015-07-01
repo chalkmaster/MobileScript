@@ -69,6 +69,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
             return new CompilerResults(false, errors);
         }
+
         public CompilerResults CompileFullProgram(MobileScriptReader file)
         {
             return CompileFullProgram(file, DefaultStackSize, DefaultCodeSize);
@@ -239,7 +240,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
             var parser = new Parser();
             parser.Init(file);
-            programDescription = parser.ParseFullProgram();
+            programDescription = parser.ParseFullProgram(Parser.eofSymbSet);
             errors.AddRange(parser.Errors);
 
             return errors.Count == numErrors; // Se não ocorreram erros.
@@ -250,7 +251,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
             var parser = new Parser();
             parser.Init(file);
-            programDescription = parser.ParseGlobalDeclarations();
+            programDescription = parser.ParseGlobalDeclarations(Parser.eofSymbSet);
             errors.AddRange(parser.Errors);
 
             return errors.Count == numErrors; // Se não ocorreram erros.
@@ -261,7 +262,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
             var parser = new Parser();
             parser.Init(file);
-            programDescription = parser.ParseStatements();
+            programDescription = parser.ParseStatements(Parser.eofSymbSet);
             errors.AddRange(parser.Errors);
 
             return errors.Count == numErrors; // Se não ocorreram erros.
@@ -272,7 +273,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
             var parser = new Parser();
             parser.Init(file);
-            IList<FunctionDeclaration> functions = parser.ParseLibrary();
+            IList<FunctionDeclaration> functions = parser.ParseLibrary(Parser.eofSymbSet);
             errors.AddRange(parser.Errors);
 
             if (functions.Count > 0)

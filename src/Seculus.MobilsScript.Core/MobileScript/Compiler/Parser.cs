@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Diagnostics;
+using System.Collections.Generic;
 using Seculus.MobileScript.Core.Extensions;
 using Seculus.MobileScript.Core.MobileScript.ProgramTree;
 using Seculus.MobileScript.Core.MobileScript.ProgramTree.Declarations;
@@ -22,7 +23,113 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         private LexSymbol _lastSymbol;
 
-        #endregion
+
+        private static LexSymbolKind[] stStartSymbs = { 
+                                                         LexSymbolKind.Identifier, 
+                                                         LexSymbolKind.IfReservedWord, 
+                                                         LexSymbolKind.WhileReservedWord,
+                                                         LexSymbolKind.ReturnReservedWord,
+                                                         LexSymbolKind.LeftBrace,
+                                                         LexSymbolKind.SemiColon
+                                                      };
+
+        /// <summary>
+        /// Conjunto de símbolos que podem iniciar um comando
+        /// </summary>
+        private static ISet<LexSymbolKind> statStartSet = new HashSet<LexSymbolKind>(stStartSymbs);
+
+        private static LexSymbolKind[] prTypeSymbs = {
+                                                        LexSymbolKind.IntReservedWord,
+                                                        LexSymbolKind.FloatReservedWord,
+                                                        LexSymbolKind.BooleanReservedWord,
+                                                        LexSymbolKind.StringReservedWord,
+                                                        LexSymbolKind.VoidReservedWord
+                                                     };
+
+
+        /// <summary>
+        /// Conjunto de símbolos que definem um tipo primitivo
+        /// </summary>
+        private static ISet<LexSymbolKind> prTypeSymbSet = new HashSet<LexSymbolKind>(prTypeSymbs);
+
+
+        private static LexSymbolKind[] relOpSymbs = {
+                                                    LexSymbolKind.EqualOperator,
+                                                    LexSymbolKind.NotEqualOperator,
+                                                    LexSymbolKind.LessThanOperator,
+                                                    LexSymbolKind.GreaterThanOperator,        
+                                                    LexSymbolKind.LessOrEqualOperator,
+                                                    LexSymbolKind.GreaterOrEqualOperator
+                                                  };
+
+        /// <summary>
+        /// Conjunto de símbolos associados às operações relacionais
+        /// </summary>
+        private static ISet<LexSymbolKind> relOpSymbSet = new HashSet<LexSymbolKind>(relOpSymbs);
+
+        private static LexSymbolKind[] factorStartSymbs = { 
+                                                            LexSymbolKind.Identifier,
+                                                            LexSymbolKind.SubtractOperator,
+                                                            LexSymbolKind.IntConstant,
+                                                            LexSymbolKind.FloatConstant,
+                                                            LexSymbolKind.TrueReservedWord,
+                                                            LexSymbolKind.FalseReservedWord,
+                                                            LexSymbolKind.StringConstant,
+                                                            LexSymbolKind.LeftParentheses
+                                                          };
+
+        /// <summary>
+        /// Conjunto de símbolos que podem iniciar um fator (método Factor())
+        /// </summary>
+        private static ISet<LexSymbolKind> factorStartSymbSet = new HashSet<LexSymbolKind>(factorStartSymbs);
+
+        private static LexSymbolKind[] mulOpSymbs = {
+                                                        LexSymbolKind.MultiplyOperator,
+                                                        LexSymbolKind.DivideOperator,
+                                                        LexSymbolKind.ModuleOperator
+                                                    };
+
+        /// <summary>
+        /// Conjunto de 'operadores de multiplicação'
+        /// </summary>
+        private static ISet<LexSymbolKind> mulOpSymbSet = new HashSet<LexSymbolKind>(mulOpSymbs);
+
+        private static LexSymbolKind[] eofSymbs = { LexSymbolKind.EndOfFile };
+
+        public static ISet<LexSymbolKind> eofSymbSet = new HashSet<LexSymbolKind>(eofSymbs);
+
+        private static ISet<LexSymbolKind> emptySet = new HashSet<LexSymbolKind>();
+
+        /// <summary>
+        /// Conj. contendo apenas ';' (a ser usado p/ TestNextSymbol)
+        /// </summary>
+        private static LexSymbolKind[] semicolonSymbs = { LexSymbolKind.SemiColon };
+        private static ISet<LexSymbolKind> semicolonSymbSet = new HashSet<LexSymbolKind>(semicolonSymbs);
+
+        /// <summary>
+        /// Conj. contendo apenas '(' (a ser usado p/ TestNextSymbol)
+        /// </summary>
+        private static LexSymbolKind[] leftParSymbs = { LexSymbolKind.LeftParentheses };
+        private static ISet<LexSymbolKind> leftParSymbSet = new HashSet<LexSymbolKind>(leftParSymbs);
+
+        /// <summary>
+        /// Conj. contendo apenas ')' (a ser usado p/ TestNextSymbol)
+        /// </summary>
+        private static LexSymbolKind[] rightParSymbs =  {  LexSymbolKind.RightParentheses };
+        private static ISet<LexSymbolKind> rightParSymbSet = new HashSet<LexSymbolKind>(rightParSymbs);
+
+        private static LexSymbolKind[] rightBraceSymbs = { LexSymbolKind.RightBrace };
+        private static ISet<LexSymbolKind> rightBraceSymbSet = new HashSet<LexSymbolKind>(rightBraceSymbs);
+
+        private static LexSymbolKind[] leftBraceSymbs = { LexSymbolKind.LeftBrace };
+        private static ISet<LexSymbolKind> leftBraceSymbSet = new HashSet<LexSymbolKind>(leftBraceSymbs);
+
+        /// <summary>
+        /// Limite para o número de erros sintáticos
+        /// </summary>
+        const int  _errorLimit = 128;
+
+         #endregion
 
         #region Properties
 
@@ -59,14 +166,14 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// program => declarations compoundStat
         /// </summary>
         /// <returns>Descrição do programa.</returns>
-        public ProgramDescription ParseFullProgram()
+        public ProgramDescription ParseFullProgram(ISet<LexSymbolKind> followSymbols)
         {
             var program = new ProgramDescription(_lastSymbol);
 
             // Reconhece as declarações.
             while (IsPrimitiveType(_lastSymbol.Kind))
             {
-                Declaration declaration = GetFunctionDeclarationOrVariableDeclarationList();
+                Declaration declaration = GetFunctionDeclarationOrVariableDeclarationList(followSymbols);
                 if (declaration != null)
                 {
                     program.Declarations.Add(declaration);
@@ -74,7 +181,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             }
 
             // Reconhece o corpo do programa.
-            CompoundStatement body = (_lastSymbol.Kind == LexSymbolKind.LeftBrace) ? GetFunctionBody() : null;
+            CompoundStatement body = (_lastSymbol.Kind == LexSymbolKind.LeftBrace) ? GetFunctionBody(followSymbols) : null;
             if (body != null)
             {
                 program.Body = body;
@@ -93,9 +200,11 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// Reconhece uma sequência de definições de funções (ex. biblioteca).
         /// </summary>
         /// <returns>Lista de declaração de funções.</returns>
-        public IList<FunctionDeclaration> ParseLibrary()
+        public IList<FunctionDeclaration> ParseLibrary(ISet<LexSymbolKind> followSymbs)
         {
             var functionsList = new List<FunctionDeclaration>();
+
+            followSymbs = setUnion(prTypeSymbSet, followSymbs);
 
             while (IsPrimitiveType(_lastSymbol.Kind))
             {
@@ -111,7 +220,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
 
                 if (_lastSymbol.Kind == LexSymbolKind.LeftParentheses)
                 {
-                    FunctionDeclaration function = GetFunctionDeclaration(type, name);
+                    FunctionDeclaration function = GetFunctionDeclaration(type, name, followSymbs);
                     functionsList.Add(function);
                 }
             }
@@ -129,14 +238,14 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// Reconhece uma sequência de declarações (variáveis globais ou funções), relativas ao código associado ao fluxo.
         /// </summary>
         /// <returns>Objeto do tipo ProgramDescription contendo a representação das declarações encontradas.</returns>
-        public ProgramDescription ParseGlobalDeclarations()
+        public ProgramDescription ParseGlobalDeclarations(ISet<LexSymbolKind> followSymbols)
         {
             var program = new ProgramDescription(_lastSymbol);
 
             // Reconhece as declarações.
             while (IsPrimitiveType(_lastSymbol.Kind))
             {
-                Declaration declaration = GetFunctionDeclarationOrVariableDeclarationList();
+                Declaration declaration = GetFunctionDeclarationOrVariableDeclarationList(followSymbols);
                 if (declaration != null)
                 {
                     program.Declarations.Add(declaration);
@@ -157,31 +266,36 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// Ex: Script direto, sem função envolvendo.
         /// </summary>
         /// <returns>Objeto do tipo ProgramDescription contendo a representação dos comandos encontrados.</returns>
-        public ProgramDescription ParseStatements()
+        public ProgramDescription ParseStatements(ISet<LexSymbolKind> followSymbols)
         {
             var program = new ProgramDescription(_lastSymbol)
                               {
                                   Body = new CompoundStatement(_lastSymbol)
                               };
 
+
+            TestNextSymbol(prTypeSymbSet, setUnion(followSymbols, statStartSet), "int, float, boolean, string, void", false);
             // Reconhece declarações
             while (IsPrimitiveType(_lastSymbol.Kind))
             {
-                VariableDeclarationList variableList = GetVariableDeclarationList();
+                VariableDeclarationList variableList = GetVariableDeclarationList(followSymbols);
                 if (variableList != null)
                 {
                     program.Body.Declarations.Add(variableList);
                 }
+                TestNextSymbol(setUnion(prTypeSymbSet, statStartSet), followSymbols, "int, float, boolean, string, void", false);
             }
 
             // Reconhece os comandos
             while (IsStatementStart(_lastSymbol.Kind))
             {
-                Statement statement = GetStatement();
+                Statement statement = GetStatement(followSymbols);
                 if (statement != null)
                 {
                     program.Body.Statements.Add(statement);
                 }
+                TestNextSymbol(statStartSet, addToSet(followSymbols, LexSymbolKind.EndOfFile), "identifier, if, while, { or return", false);
+
             }
 
             // Trata o final do arquivo.
@@ -224,19 +338,70 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         }
 
         /// <summary>
+        /// Verifica se o último símbolo lido é um dos símbolos esperados. Caso não seja,
+        /// gera a mensagem de erro indicada por errorMsg e ignora os símbolos de entrada
+        /// até encontrar um símbolo esperado ou um símbolo no conjunto followSymbols.
+        /// Este método é a base para o esquema de recuperação de erros sintáticos:
+        ///     caso detecte algum erro, procura por um ponto confiável para continuar a análise sintática.
+        ///     Deve ser aplicado em pontos específicos da análise sintática. Neste caso, considerando as
+        ///     dependências entre os símbolos não terminais da gramática (que na implementação viram métodos
+        ///     desta classe), esses pontos estão em GetFactor(), em GetStatement() e derivados, e no método responsável
+        ///     pelo tratamento do 'corpo' de uma função -- essa regra é passível de ajustes pontuais em função
+        ///     dos resultados obtidos [o processo é 'ad hoc', sorry ].
+        /// </summary>
+        /// <param name="expectedSymbols"></param>
+        /// <param name="followSymbols"></param>
+        private bool TestNextSymbol(ISet<LexSymbolKind> expectedSymbols, ISet<LexSymbolKind> followSymbols, string errorMsg, bool readNext)
+        {
+            if( !expectedSymbols.Contains(_lastSymbol.Kind) ) {
+                EmitUnexpectedSymbolError(errorMsg, _lastSymbol, false);
+                followSymbols = setUnion(expectedSymbols, followSymbols);
+                while (
+                        (_lastSymbol != null) &&
+                        (_lastSymbol.Kind != LexSymbolKind.EndOfFile) &&
+                        ! followSymbols.Contains(_lastSymbol.Kind)
+                      )
+                {
+                    ReadNextSymbol();
+                }
+                return false;
+            }
+            if(readNext) ReadNextSymbol();
+            return true;
+        }
+
+
+
+        /// <summary>
         /// Insere uma mensagem de erro na lista.
         /// </summary>
         /// <param name="message">Mensagem de erro</param>
         /// <param name="symbol">Símbolo encontrado (diferente do esperado).</param>
         private void EmitError(string message, LexSymbol symbol)
         {
-            Errors.Add(new CompilationError(message, CompilationErrorType.SyntaxError, symbol));
+            if( Errors.Count <= _errorLimit ) Errors.Add(new CompilationError(message, CompilationErrorType.SyntaxError, symbol));
+            ReadNextSymbol();  
         }
 
         private void EmitUnexpectedSymbolError(string expected, LexSymbol symbolFound)
         {
             EmitError("Expected [{0}] but found [{1}]".FormatWith(expected, symbolFound.Text), symbolFound);
+           
         }
+
+        /// <summary>
+        /// Versão da função anterior que não lê o próximo símbolo.
+        /// (usada por testNextSymbol())
+        /// </summary>
+        /// <param name="expected"></param>
+        /// <param name="symbolFound"></param>
+        /// <param name="dummy"></param>
+        private void EmitUnexpectedSymbolError(string expected, LexSymbol symbolFound, bool dummy)
+        {
+            if (Errors.Count <= _errorLimit) Errors.Add(new CompilationError("Expected [{0}] but found [{1}]".FormatWith(expected, symbolFound.Text), CompilationErrorType.SyntaxError, symbolFound));
+        }
+
+        
 
         /// <summary>
         /// Converte um código de operação criado pelo léxico para o equivalente na árvore de programa (pura burocracia!)
@@ -299,11 +464,52 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// <returns>True se for um operador relacional. Caso contrário, false.</returns>
         private bool IsRelationalOperator(LexSymbolKind symbolKind)
         {
-            return (
-                (symbolKind == LexSymbolKind.EqualOperator) || (symbolKind == LexSymbolKind.NotEqualOperator) ||
-                (symbolKind == LexSymbolKind.LessThanOperator) || (symbolKind == LexSymbolKind.GreaterThanOperator) ||
-                (symbolKind == LexSymbolKind.LessOrEqualOperator) || (symbolKind == LexSymbolKind.GreaterOrEqualOperator)
-            );
+            return relOpSymbSet.Contains(symbolKind);
+        }
+
+
+        /// <summary>
+        /// Retorna um novo conjunto de símbolos cujo conteúdo é a união dos dois conjuntos passados como parâmetro.
+        /// (usado nos métodos de análise sintática)
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <returns></returns>
+        private ISet<LexSymbolKind> setUnion(ISet<LexSymbolKind> s1, ISet<LexSymbolKind> s2)
+        {
+            ISet<LexSymbolKind> res = new HashSet<LexSymbolKind>(s1);
+            res.UnionWith(s2);
+            return res;
+        }
+
+        private ISet<LexSymbolKind> setUnion(ISet<LexSymbolKind> s1, ISet<LexSymbolKind> s2, ISet<LexSymbolKind> s3)
+        {
+            ISet<LexSymbolKind> res = new HashSet<LexSymbolKind>(s1);
+            res.UnionWith(s2);
+            res.UnionWith(s3);
+            return res;
+        }
+
+        private ISet<LexSymbolKind> addToSet(ISet<LexSymbolKind> s, LexSymbolKind symb)
+        {
+            ISet<LexSymbolKind> res = new HashSet<LexSymbolKind>(s);
+            res.Add(symb);
+            return res;
+        }
+
+        private ISet<LexSymbolKind> addToSet(ISet<LexSymbolKind> s, LexSymbolKind symb1, LexSymbolKind symb2)
+        {
+            ISet<LexSymbolKind> res = new HashSet<LexSymbolKind>(s);
+            res.Add(symb1);
+            res.Add(symb2);
+            return res;
+        }
+
+        private ISet<LexSymbolKind> newSymbolSet(LexSymbolKind symb)
+        {
+            ISet<LexSymbolKind> res = new HashSet<LexSymbolKind>();
+            res.Add(symb);
+            return res;
         }
 
         /// <summary>
@@ -314,11 +520,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// <returns>True se for um operador relacional. Caso contrário, false.</returns>
         private bool IsStatementStart(LexSymbolKind symbolKind)
         {
-            return (
-                (symbolKind == LexSymbolKind.Identifier) || (symbolKind == LexSymbolKind.IfReservedWord) ||
-                (symbolKind == LexSymbolKind.WhileReservedWord) || (symbolKind == LexSymbolKind.ReturnReservedWord) ||
-                (symbolKind == LexSymbolKind.LeftBrace) || (symbolKind == LexSymbolKind.SemiColon)
-            );
+            return statStartSet.Contains(symbolKind);          
         }
 
         /// <summary>
@@ -329,11 +531,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// <returns></returns>
         private bool IsPrimitiveType(LexSymbolKind symbolKind)
         {
-            return (
-                (symbolKind == LexSymbolKind.IntReservedWord) || (symbolKind == LexSymbolKind.FloatReservedWord) ||
-                (symbolKind == LexSymbolKind.BooleanReservedWord) || (symbolKind == LexSymbolKind.StringReservedWord) ||
-                (symbolKind == LexSymbolKind.VoidReservedWord)
-            );
+            return prTypeSymbSet.Contains(symbolKind);
         }
 
         #endregion
@@ -402,13 +600,13 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         /// <param name="type">Tipo "inicial" da variável. (Digo tipo inicial pois podemos descobrir que na verdade é um vetor).</param>
         /// <returns>VariableDeclaration</returns>
-        private VariableDeclaration GetVariableDeclaration(TypeDeclaration type)
+        private VariableDeclaration GetVariableDeclaration(TypeDeclaration type, ISet<LexSymbolKind> followSymbols)
         {
             if (_lastSymbol.Kind == LexSymbolKind.Identifier)
             {
                 string name = _lastSymbol.Text;
                 ReadNextSymbol(); // Pula o identifier. Já pegamos o nome dele acima.
-                return GetVariableDeclaration(type, name);
+                return GetVariableDeclaration(type, name, followSymbols);
             }
             else
             {
@@ -425,12 +623,12 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// <param name="type">Tipo já reconhecido</param>
         /// <param name="name">Nome já reconhecido</param>
         /// <returns>VariableDeclaration</returns>
-        private VariableDeclaration GetVariableDeclaration(TypeDeclaration type, string name)
+        private VariableDeclaration GetVariableDeclaration(TypeDeclaration type, string name, ISet<LexSymbolKind> followSymbols)
         {
             LexSymbol symbol = _lastSymbol;
 
             type = GetCorrectType(type);
-            Expression initialValue = GetVariableInitialValue();
+            Expression initialValue = GetVariableInitialValue(followSymbols);
 
             // Valida o caso de array sem tamanho.
             var vectorType = type as VectorTypeDeclaration;
@@ -462,11 +660,14 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// <param name="type">Tipo da variável.</param>
         /// <param name="name">Nome da variável.</param>
         /// <returns></returns>
-        private VariableDeclarationList GetVariableDeclarationList(TypeDeclaration type, string name)
+        private VariableDeclarationList GetVariableDeclarationList(TypeDeclaration type, string name, ISet<LexSymbolKind> followSymbols)
         {
             // Cria a lista e adiciona a primeira variável.
             var variableList = new VariableDeclarationList(type, _lastSymbol);
-            VariableDeclaration variable = GetVariableDeclaration(type, name);
+
+            followSymbols = addToSet(followSymbols, LexSymbolKind.Comma, LexSymbolKind.SemiColon);
+
+            VariableDeclaration variable = GetVariableDeclaration(type, name, followSymbols);
             if (variable != null)
             {
                 variableList.Add(variable);
@@ -486,7 +687,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
                     ReadNextSymbol();
                 }
 
-                variable = GetVariableDeclaration(type); // Como é uma lista, o tipo já foi identificado lá atrás.
+                variable = GetVariableDeclaration(type, followSymbols); // Como é uma lista, o tipo já foi identificado lá atrás.
                 if (variable != null)
                 {
                     variableList.Add(variable);
@@ -510,10 +711,9 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// variableList => variableDeclaration { ',' variableDeclaration }
         /// </summary>
         /// <returns></returns>
-        private VariableDeclarationList GetVariableDeclarationList()
+        private VariableDeclarationList GetVariableDeclarationList(ISet<LexSymbolKind> followSymbols)
         {
-            if (!IsPrimitiveType(_lastSymbol.Kind)) throw new UnexpectedSymbolException("Expecting a primitive type symbol but got {0}.".FormatWith(_lastSymbol));
-
+            Debug.Assert(IsPrimitiveType(_lastSymbol.Kind), "Expecting a primitive type symbol but got {0}.".FormatWith(_lastSymbol));
             // Pega o tipo da declaração de variável(eis).
             TypeDeclaration type = GetPrimitiveType();
 
@@ -526,7 +726,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             string variableName = _lastSymbol.Text;
             ReadNextSymbol(); // Pula o identificador.
 
-            return GetVariableDeclarationList(type, variableName);
+            return GetVariableDeclarationList(type, variableName, followSymbols);
         }
 
         /// <summary>
@@ -611,7 +811,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// <param name="type">Tipo de retorno da função.</param>
         /// <param name="name">Nome da função.</param>
         /// <returns></returns>
-        private FunctionDeclaration GetFunctionDeclaration(TypeDeclaration type, string name)
+        private FunctionDeclaration GetFunctionDeclaration(TypeDeclaration type, string name, ISet<LexSymbolKind> followSymbs)
         {
             CheckLastSymbolKindAndReadNext(LexSymbolKind.LeftParentheses, "(");
 
@@ -621,7 +821,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             IList<VariableDeclaration> parameters = GetParameterDeclarationList();
 
             // Reconhece o corpo da função.
-            CompoundStatement body = GetFunctionBody();
+            CompoundStatement body = GetFunctionBody(followSymbs);
 
             return new FunctionDeclaration(name, type, parameters, body, symbol);
         }
@@ -631,10 +831,9 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// functionDeclarationOrVariableDeclarationList => type identifier '(' functionDeclaration | type identifier variableDeclarationList
         /// </summary>
         /// <returns></returns>
-        private Declaration GetFunctionDeclarationOrVariableDeclarationList()
+        private Declaration GetFunctionDeclarationOrVariableDeclarationList(ISet<LexSymbolKind> followSymbols)
         {
-            if (!IsPrimitiveType(_lastSymbol.Kind)) throw new UnexpectedSymbolException("Expecting a primitive type symbol but got {0}.".FormatWith(_lastSymbol));
-
+            Debug.Assert(IsPrimitiveType(_lastSymbol.Kind), "Expecting a primitive type symbol but got {0}.".FormatWith(_lastSymbol));
             // Pega o tipo da função ou variável(eis).
             TypeDeclaration type = GetPrimitiveType();
 
@@ -652,11 +851,11 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             // Se tiver um parenteses depois, é uma função.
             if (_lastSymbol.Kind == LexSymbolKind.LeftParentheses)
             {
-                return GetFunctionDeclaration(type, name);
+                return GetFunctionDeclaration(type, name, followSymbols);
             }
 
             // Caso contrário, é uma declaração de variável.
-            return GetVariableDeclarationList(type, name);
+            return GetVariableDeclarationList(type, name, followSymbols);
         }
 
         #endregion
@@ -702,7 +901,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
                     tuple.Elements.Add(constant);
                     if (_lastSymbol.Kind == LexSymbolKind.Comma)
                     {
-                        ReadNextSymbol(); // pela a vírgula para ler o próximo item da tupla.
+                        ReadNextSymbol(); // pula a vírgula para ler o próximo item da tupla.
                     }
                     kind = _lastSymbol.Kind;
                 }
@@ -764,7 +963,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// startValue => [ '=' constant ]
         /// </summary>
         /// <returns></returns>
-        private Expression GetVariableInitialValue()
+        private Expression GetVariableInitialValue(ISet<LexSymbolKind> followSymbols)
         {
             if (_lastSymbol.Kind != LexSymbolKind.AssignOperator)
             {
@@ -780,7 +979,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             }
 
             // Caso contrário, é uma expressão.
-            return GetExpression();
+            return GetExpression(followSymbols);
         }
 
         /// <summary>
@@ -788,12 +987,11 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// index => '[' expression ']'
         /// </summary>
         /// <returns></returns>
-        private Expression GetIndex()
+        private Expression GetIndex(ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.LeftSquareBracket) throw new UnexpectedSymbolException(LexSymbolKind.LeftSquareBracket, _lastSymbol.Kind);
-
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.LeftSquareBracket);
             ReadNextSymbol(); // Pula '['
-            Expression expression = GetFullExpression();
+            Expression expression = GetFullExpression(this.addToSet(followSymbols,LexSymbolKind.RightSquareBracket));
             CheckLastSymbolKindAndReadNext(LexSymbolKind.RightSquareBracket, "]");
             return expression;
         }
@@ -804,12 +1002,13 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         /// <param name="name">Nome da variável (identificador).</param>
         /// <returns>Variable ou Indexing</returns>
-        private Expression GetVariable(string name)
+        private Expression GetVariable(string name, ISet<LexSymbolKind> followSymbols)
         {
             Expression result = new Variable(name, _lastSymbol);
+            followSymbols = addToSet(followSymbols, LexSymbolKind.RightSquareBracket);
             while (_lastSymbol.Kind == LexSymbolKind.LeftSquareBracket)
             {
-                result = new IndexingOperation(result, GetIndex(), _lastSymbol);
+                result = new IndexingOperation(result, GetIndex(followSymbols), _lastSymbol);
             }
             return result;
         }
@@ -819,17 +1018,18 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         /// <param name="functionName">Nome da função (identificador).</param>
         /// <returns></returns>
-        private FunctionCall GetFunctionCallOperation(string functionName)
+        private FunctionCall GetFunctionCallOperation(string functionName, ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.LeftParentheses) throw new UnexpectedSymbolException(LexSymbolKind.LeftParentheses, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.LeftParentheses);
 
             var functionCall = new FunctionCall(functionName, _lastSymbol);
             ReadNextSymbol(); // Pula '('
+            followSymbols = addToSet(followSymbols, LexSymbolKind.RightParentheses, LexSymbolKind.Comma);
             while ((_lastSymbol.Kind != LexSymbolKind.RightParentheses) &&
                    (_lastSymbol.Kind != LexSymbolKind.EndOfFile) &&
                    (_lastSymbol.Kind != LexSymbolKind.Error))
             {
-                Expression parameter = GetFullExpression();
+                Expression parameter = GetFullExpression(followSymbols);
                 functionCall.Parameters.Add(parameter);
                 if (_lastSymbol.Kind == LexSymbolKind.Comma)
                 {
@@ -837,13 +1037,8 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
                 }
             }
 
-            if (_lastSymbol.Kind != LexSymbolKind.RightParentheses)
-            {
-                EmitUnexpectedSymbolError(")", _lastSymbol);
-                return null;
-            }
+            CheckLastSymbolKindAndReadNext(LexSymbolKind.RightParentheses, ")");
 
-            ReadNextSymbol(); // Pula ')'
             return functionCall;
         }
 
@@ -853,13 +1048,13 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         /// <param name="name">Nome (identificador).</param>
         /// <returns>Expressão</returns>
-        private Expression GetVariableOrFunctionCallOperation(string name)
+        private Expression GetVariableOrFunctionCallOperation(string name, ISet<LexSymbolKind> followSymbols)
         {
             if (_lastSymbol.Kind == LexSymbolKind.LeftParentheses)
             {
-                return GetFunctionCallOperation(name);
+                return GetFunctionCallOperation(name, followSymbols);
             }
-            return GetVariable(name);
+            return GetVariable(name, followSymbols);
         }
 
         /// <summary>
@@ -873,35 +1068,42 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         ///         | functionCall
         /// </summary>
         /// <returns>Expressão</returns>
-        private Expression GetFactor()
+        private Expression GetFactor(ISet<LexSymbolKind> followSymbols)
         {
-            LexSymbol symbol = _lastSymbol;
-            
-            ReadNextSymbol(); // Já lê o próximo símbolo antes de retornar.
+ 
+            TestNextSymbol(factorStartSymbSet, followSymbols, "identifier, '-', '(' or constant", false); // TODO: tirar (Factor)
 
-            switch (symbol.Kind)
+            LexSymbol symbol = _lastSymbol;
+
+            if (factorStartSymbSet.Contains(symbol.Kind))
             {
-                case LexSymbolKind.Identifier:
-                    return GetVariableOrFunctionCallOperation(symbol.Text);
-                case LexSymbolKind.SubtractOperator:
-                    return new UnaryOperation(RplOperationType.Minus, GetFactor(), symbol);
-                case LexSymbolKind.IntConstant:
-                    return new Constant(symbol.Text, TypeDeclaration.Int, symbol);
-                case LexSymbolKind.FloatConstant:
-                    return new Constant(symbol.Text, TypeDeclaration.Float, symbol);
-                case LexSymbolKind.TrueReservedWord:
-                case LexSymbolKind.FalseReservedWord:
-                    return new Constant(symbol.Text, TypeDeclaration.Bool, symbol);
-                case LexSymbolKind.StringConstant:
-                    return new Constant(symbol.Text, TypeDeclaration.String, symbol);
-                case LexSymbolKind.LeftParentheses:
-                    Expression expression = GetFullExpression();
-                    CheckLastSymbolKindAndReadNext(LexSymbolKind.RightParentheses, ")");
-                    return expression;
-                default:
-                    EmitUnexpectedSymbolError("identifier, - or constant", symbol);
-                    return null;
+                ReadNextSymbol(); // Lê o próximo símbolo e continua a análise sintática
+
+                switch (symbol.Kind)
+                {
+                    case LexSymbolKind.Identifier:
+                        return GetVariableOrFunctionCallOperation(symbol.Text, followSymbols);
+                    case LexSymbolKind.SubtractOperator:
+                        return new UnaryOperation(RplOperationType.Minus, GetFactor(followSymbols), symbol);
+                    case LexSymbolKind.IntConstant:
+                        return new Constant(symbol.Text, TypeDeclaration.Int, symbol);
+                    case LexSymbolKind.FloatConstant:
+                        return new Constant(symbol.Text, TypeDeclaration.Float, symbol);
+                    case LexSymbolKind.TrueReservedWord:
+                    case LexSymbolKind.FalseReservedWord:
+                        return new Constant(symbol.Text, TypeDeclaration.Bool, symbol);
+                    case LexSymbolKind.StringConstant:
+                        return new Constant(symbol.Text, TypeDeclaration.String, symbol);
+                    case LexSymbolKind.LeftParentheses:
+                        // ReadNextSymbol(); // pula ')'  <=== erro !!!
+                        Expression expression = GetFullExpression(addToSet(followSymbols, LexSymbolKind.RightParentheses));
+                        CheckLastSymbolKindAndReadNext(LexSymbolKind.RightParentheses, ")");
+                        return expression;
+                }
+
             }
+ 
+            return null;        
         }
 
         /// <summary>
@@ -909,15 +1111,16 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// term : factor { {'*' | '/' | '%'}  term }
         /// </summary>
         /// <returns></returns>
-        private Expression GetTerm()
+        private Expression GetTerm(ISet<LexSymbolKind> followSymbols)
         {
             LexSymbol symbol;
-            Expression expression = GetFactor();
-            while ((_lastSymbol.Kind == LexSymbolKind.MultiplyOperator) || (_lastSymbol.Kind == LexSymbolKind.DivideOperator) || (_lastSymbol.Kind == LexSymbolKind.ModuleOperator))
+            followSymbols = setUnion(followSymbols, mulOpSymbSet);
+            Expression expression = GetFactor(followSymbols);
+            while ( mulOpSymbSet.Contains(_lastSymbol.Kind) )
             {
                 symbol = _lastSymbol;
-                ReadNextSymbol(); // Pela o operador ('*' ou '/' ou '%')
-                expression = new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetTerm(), symbol);
+                ReadNextSymbol(); // Pula o operador ('*' ou '/' ou '%')
+                expression = new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetTerm(followSymbols), symbol);
             }
             return expression;
         }
@@ -927,15 +1130,15 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// simpleExpression => term { {'+' | '-'} simpleExpression }
         /// </summary>
         /// <returns></returns>
-        private Expression GetSimpleExpression()
+        private Expression GetSimpleExpression(ISet<LexSymbolKind> followSymbols)
         {
             LexSymbol symbol;
-            Expression expression = GetTerm();
+            Expression expression = GetTerm(addToSet(followSymbols, LexSymbolKind.AddOperator, LexSymbolKind.SubtractOperator));
             while ((_lastSymbol.Kind == LexSymbolKind.AddOperator) || _lastSymbol.Kind == LexSymbolKind.SubtractOperator)
             {
                 symbol = _lastSymbol;
                 ReadNextSymbol(); // Pula o operador ('+' ou '-')
-                expression = new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetSimpleExpression(), symbol);
+                expression = new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetSimpleExpression(followSymbols), symbol);
             }
             return expression;
         }
@@ -945,15 +1148,15 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// GetExpression : simpleExpression [ RelationalOperator simpleExpression ]
         /// </summary>
         /// <returns></returns>
-        private Expression GetExpression()
+        private Expression GetExpression(ISet<LexSymbolKind> followSymbols)
         {
             LexSymbol symbol;
-            Expression expression = GetSimpleExpression();
+            Expression expression = GetSimpleExpression(followSymbols);
             if (IsRelationalOperator(_lastSymbol.Kind))
             {
                 symbol = _lastSymbol;
                 ReadNextSymbol(); // Pula o operador relacional.
-                return new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetSimpleExpression(), symbol);
+                return new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetSimpleExpression(followSymbols), symbol);
             }
             return expression;
         }
@@ -965,22 +1168,22 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         ///     ('NOT' fullExpression) | (expression [ ( 'AND' | 'OR' ) fullExpression ])
         /// </summary>
         /// <returns></returns>
-        private Expression GetFullExpression()
+        private Expression GetFullExpression(ISet<LexSymbolKind> followSymbols)
         {
             LexSymbol symbol;
             if (_lastSymbol.Kind == LexSymbolKind.NotOperator)
             {
                 symbol = _lastSymbol;
                 ReadNextSymbol(); // pula o '!'
-                return new UnaryOperation(RplOperationType.Not, GetFullExpression(), symbol);
+                return new UnaryOperation(RplOperationType.Not, GetFullExpression(followSymbols), symbol);
             }
 
-            Expression expression = GetExpression();
+            Expression expression = GetExpression(followSymbols);
             if ((_lastSymbol.Kind == LexSymbolKind.AndOperator) || (_lastSymbol.Kind == LexSymbolKind.OrOperator))
             {
                 symbol = _lastSymbol;
                 ReadNextSymbol(); // Pula o operador ('&&' ou '||')
-                return new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetFullExpression(), symbol);
+                return new DyadicOperation(GetRplOperation(symbol.Kind), expression, GetFullExpression(followSymbols), symbol);
             }
             return expression;
         }
@@ -991,14 +1194,17 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         /// <param name="variableName"></param>
         /// <returns></returns>
-        private Statement GetAssignmentStatement(string variableName)
+        private Statement GetAssignmentStatement(string variableName, ISet<LexSymbolKind> followSymbols)
         {
             LexSymbol symbol = _lastSymbol;
-
-            Expression variable = GetVariable(variableName);
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.AssignOperator, "=");
-            Expression assignedValue = GetFullExpression();
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.SemiColon, ";");
+            followSymbols = addToSet(followSymbols, LexSymbolKind.SemiColon);
+            Expression variable = GetVariable(variableName, addToSet(followSymbols, LexSymbolKind.AssignOperator));
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.AssignOperator, "=");
+            TestNextSymbol(newSymbolSet(LexSymbolKind.AssignOperator), followSymbols, "=", false);
+            if (_lastSymbol.Kind == LexSymbolKind.AssignOperator) ReadNextSymbol();
+            Expression assignedValue = GetFullExpression(followSymbols);
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.SemiColon, ";");
+            TestNextSymbol(semicolonSymbSet, followSymbols, ";", true);
 
             return new Assignment(variable, assignedValue, symbol);
         }
@@ -1009,9 +1215,9 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// </summary>
         /// <param name="functionName">Nome da função.</param>
         /// <returns></returns>
-        private Statement GetFunctionCallStatement(string functionName)
+        private Statement GetFunctionCallStatement(string functionName, ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.LeftParentheses) throw new UnexpectedSymbolException(LexSymbolKind.LeftParentheses, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.LeftParentheses);
 
             LexSymbol symbol = _lastSymbol;
             ReadNextSymbol(); // Pula o '('
@@ -1020,7 +1226,7 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             bool error = false;
             while ((_lastSymbol.Kind != LexSymbolKind.RightParentheses) && (!error))
             {
-                Expression parameter = GetFullExpression();
+                Expression parameter = GetFullExpression(addToSet(followSymbols, LexSymbolKind.RightParentheses));
                 if (parameter != null)
                 {
                     functionCallStatement.Parameters.Add(parameter);
@@ -1037,7 +1243,8 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             }
 
             ReadNextSymbol(); // Pula o ')'
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.SemiColon, ";");
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.SemiColon, ";");
+            TestNextSymbol(semicolonSymbSet, followSymbols, ";", true);
             return functionCallStatement;
         }
 
@@ -1046,17 +1253,18 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// assignmentOrFunctionCall => identifier '(' call | identifier assignment
         /// </summary>
         /// <returns></returns>
-        private Statement GetAssignmentOrFunctionCallStatement()
+        private Statement GetAssignmentOrFunctionCallStatement(ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.Identifier) throw new UnexpectedSymbolException(LexSymbolKind.Identifier, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.Identifier);
 
+            followSymbols = addToSet(followSymbols, LexSymbolKind.SemiColon);
             string identifierName = _lastSymbol.Text;
             ReadNextSymbol(); // Pula o identificador
             if (_lastSymbol.Kind == LexSymbolKind.LeftParentheses)
             {
-                return GetFunctionCallStatement(identifierName);
+                return GetFunctionCallStatement(identifierName, followSymbols);
             }
-            return GetAssignmentStatement(identifierName);
+            return GetAssignmentStatement(identifierName, followSymbols);
         }
 
         /// <summary>
@@ -1064,24 +1272,24 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// GetIfStatement => 'if' '(' expression ')' statement [ 'else' statement ']
         /// </summary>
         /// <returns></returns>
-        private IfStatement GetIfStatement()
+        private IfStatement GetIfStatement(ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.IfReservedWord) throw new UnexpectedSymbolException(LexSymbolKind.IfReservedWord, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.IfReservedWord);
 
             LexSymbol symbol = _lastSymbol;
             ReadNextSymbol(); // pula o 'if'
 
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.LeftParentheses, "(");
-            Expression condition = GetFullExpression();
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.RightParentheses, ")");
-
-            Statement thenStatement = GetStatement();
+            TestNextSymbol(leftParSymbSet, addToSet(followSymbols, LexSymbolKind.RightParentheses), "(", true);
+            ISet<LexSymbolKind> exprFollowSymbols = setUnion(followSymbols, addToSet(statStartSet, LexSymbolKind.RightParentheses, LexSymbolKind.ElseReservedWord));
+            Expression condition = GetFullExpression(exprFollowSymbols);
+            TestNextSymbol(rightParSymbSet, exprFollowSymbols, "(", true);
+            Statement thenStatement = GetStatement(addToSet(followSymbols,LexSymbolKind.ElseReservedWord));
             Statement elseStatement = null;
 
             if (_lastSymbol.Kind == LexSymbolKind.ElseReservedWord)
             {
                 ReadNextSymbol(); // Pula o 'else'
-                elseStatement = GetStatement();
+                elseStatement = GetStatement(followSymbols);
             }
 
             return new IfStatement(condition, thenStatement, elseStatement, symbol);
@@ -1092,18 +1300,20 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// whileStatement => 'while' '(' expression ')' statement
         /// </summary>
         /// <returns></returns>
-        private WhileStatement GetWhileStatement()
+        private WhileStatement GetWhileStatement(ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.WhileReservedWord) throw new UnexpectedSymbolException(LexSymbolKind.WhileReservedWord, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.WhileReservedWord);
 
             LexSymbol symbol = _lastSymbol;
             ReadNextSymbol(); // Pula o 'while'
+            followSymbols = setUnion(followSymbols, addToSet(statStartSet, LexSymbolKind.RightParentheses));
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.LeftParentheses, "(");
+            TestNextSymbol(leftParSymbSet, followSymbols, "(", true);
+            Expression condition = GetFullExpression(followSymbols);
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.RightParentheses, ")");
+            TestNextSymbol(rightParSymbSet, followSymbols, ")", true);
 
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.LeftParentheses, "(");
-            Expression condition = GetFullExpression();
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.RightParentheses, ")");
-
-            Statement body = GetStatement();
+            Statement body = GetStatement(followSymbols);
 
             return new WhileStatement(condition, body, symbol);
         }
@@ -1113,15 +1323,17 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// compoundStatement => '{'  { statement } '}'
         /// </summary>
         /// <returns></returns>
-        private CompoundStatement GetCompoundStatement()
+        private CompoundStatement GetCompoundStatement(ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.LeftBrace) throw new UnexpectedSymbolException(LexSymbolKind.LeftBrace, _lastSymbol.Kind);
+           //  if (_lastSymbol.Kind != LexSymbolKind.LeftBrace) throw new UnexpectedSymbolException(LexSymbolKind.LeftBrace, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.LeftBrace);
 
             var compoundStatement = new CompoundStatement(_lastSymbol);
             ReadNextSymbol(); // Pula o '{'
+        
             while (IsStatementStart(_lastSymbol.Kind))
             {
-                Statement statement = GetStatement();
+                Statement statement = GetStatement(addToSet(followSymbols, LexSymbolKind.RightBrace));
                 if (statement != null)
                 {
                     compoundStatement.Statements.Add(statement);
@@ -1136,9 +1348,9 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// 'return' [ expression ]  ';'
         /// </summary>
         /// <returns></returns>
-        private ReturnStatement GetReturnStatement()
+        private ReturnStatement GetReturnStatement(ISet<LexSymbolKind> followSymbols)
         {
-            if (_lastSymbol.Kind != LexSymbolKind.ReturnReservedWord) throw new UnexpectedSymbolException(LexSymbolKind.ReturnReservedWord, _lastSymbol.Kind);
+            Debug.Assert(_lastSymbol.Kind == LexSymbolKind.ReturnReservedWord);
 
             LexSymbol symbol = _lastSymbol;
             ReadNextSymbol(); // Pula 'return'
@@ -1146,10 +1358,11 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
             Expression returnExpression = null;
             if (_lastSymbol.Kind != LexSymbolKind.SemiColon)
             {
-                returnExpression = GetFullExpression();
+                returnExpression = GetFullExpression(addToSet(followSymbols,LexSymbolKind.SemiColon));
             }
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.SemiColon, ";");
-
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.SemiColon, ";");
+            TestNextSymbol(semicolonSymbSet, followSymbols, ";", true);
+            
             return new ReturnStatement(returnExpression, symbol);
         }
 
@@ -1158,24 +1371,25 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// statement => assignOrCall | ifStatement | whileStatement | compoundStatement
         /// </summary>
         /// <returns></returns>
-        private Statement GetStatement()
+        private Statement GetStatement(ISet<LexSymbolKind> followSymbols)
         {
-            if (!IsStatementStart(_lastSymbol.Kind)) throw new ParsingException("Last symbol does not start a statement.");
-
+ 
+            ISet<LexSymbolKind> followSymbolsWithSemicolon = addToSet(followSymbols, LexSymbolKind.SemiColon);
+            TestNextSymbol(statStartSet, followSymbolsWithSemicolon, "identifier, if, while, { or return", false);
             switch (_lastSymbol.Kind)
             {
                 case LexSymbolKind.Identifier:
-                    return GetAssignmentOrFunctionCallStatement();
+                    return GetAssignmentOrFunctionCallStatement(followSymbolsWithSemicolon);
                 case LexSymbolKind.IfReservedWord:
-                    return GetIfStatement();
+                    return GetIfStatement(followSymbols);
                 case LexSymbolKind.WhileReservedWord:
-                    return GetWhileStatement();
+                    return GetWhileStatement(followSymbols);
                 case LexSymbolKind.LeftBrace:
-                    return GetCompoundStatement();
+                    return GetCompoundStatement(followSymbols);
                 case LexSymbolKind.ReturnReservedWord:
-                    return GetReturnStatement();
+                    return GetReturnStatement(followSymbolsWithSemicolon);
                 default:
-                    EmitUnexpectedSymbolError("identifier, if, while, { or return", _lastSymbol);
+                     EmitUnexpectedSymbolError("identifier, if, while, { or return", _lastSymbol);
                     return null;
             }
         }
@@ -1185,33 +1399,45 @@ namespace Seculus.MobileScript.Core.MobileScript.Compiler
         /// functionBody => '{' { variableDeclaration } { statement } '}'
         /// </summary>
         /// <returns></returns>
-        private CompoundStatement GetFunctionBody()
+        private CompoundStatement GetFunctionBody(ISet<LexSymbolKind> followSymbols)
         {
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.LeftBrace, "{");
+
+            TestNextSymbol(newSymbolSet(LexSymbolKind.LeftBrace), setUnion(followSymbols, statStartSet, prTypeSymbSet), "{", true);
+
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.LeftBrace, "{"); 
+
+            followSymbols = addToSet(followSymbols,LexSymbolKind.RightBrace);
+
             var functionBody = new CompoundStatement(_lastSymbol);
 
             while (IsPrimitiveType(_lastSymbol.Kind))
             {
-                VariableDeclarationList variableList = GetVariableDeclarationList();
+                VariableDeclarationList variableList = GetVariableDeclarationList(followSymbols);
                 if (variableList != null)
                 {
                     functionBody.Declarations.Add(variableList);
                 }
+                TestNextSymbol(setUnion(prTypeSymbSet, statStartSet), followSymbols, "int, float, boolean, string, void", false);
             }
 
             while (IsStatementStart(_lastSymbol.Kind))
             {
-                Statement statement = GetStatement();
+                Statement statement = GetStatement(followSymbols);
                 if (statement != null)
                 {
                     functionBody.Statements.Add(statement);
                 }
+                TestNextSymbol(addToSet(statStartSet, LexSymbolKind.RightBrace), followSymbols, "identifier, if, while, { or return", false);
             }
 
-            CheckLastSymbolKindAndReadNext(LexSymbolKind.RightBrace, "}");
+            //CheckLastSymbolKindAndReadNext(LexSymbolKind.RightBrace, "}");
+            TestNextSymbol(rightBraceSymbSet, setUnion(prTypeSymbSet, followSymbols), "}", true);
             return functionBody;
         }
 
+        #endregion
+
+        #region support methods
         #endregion
     }
 }

@@ -1,0 +1,12 @@
+Método ReadChar()
+-- possível bug: caso a leitura do próximo caracter avance para uma 'linha de desvio' o caracter lido é ignorado.
+	( isso pode não ser problema se for garantido que esse caracter não é significativo para o programa, mas deve ser verificado).
+	
+-- com relação ao esquema de includes: como tratar a numeração de linhas nas mensagens de erro ? (o erro pode estar uma linha sendo incluida)
+-- esse esquema de preprocessamento suporta #includes encaixados ?
+-- e macro definições ? (os define's são substituídos, como em C ?
+-- comando vazio
+-- vetor sem tamanho ? (parser.cs, GetVariableDeclaration()
+
+
+	 
